@@ -1,0 +1,28 @@
+CREATE OR REPLACE TABLE stg_billing AS
+SELECT
+    ProviderName                                        AS provider,
+    SubAccountName                                      AS sub_account,
+    CAST(ChargePeriodStart AS DATE)                     AS charge_date,
+    strftime(CAST(ChargePeriodStart AS DATE), '%Y-%m')  AS month,
+    ChargeCategory                                      AS charge_category,
+    ChargeDescription                                   AS charge_description,
+    ServiceName                                         AS service_name,
+    COALESCE(NULLIF(ServiceCategory, ''), 'Other')      AS service_category,
+    ResourceId                                          AS resource_id,
+    ResourceName                                        AS resource_name,
+    PricingCategory                                     AS pricing_category,
+    CommitmentDiscountId                                AS commitment_id,
+    CommitmentDiscountName                              AS commitment_name,
+    CommitmentDiscountStatus                            AS commitment_status,
+    CAST(ListCost AS DOUBLE)                            AS list_cost,
+    CAST(BilledCost AS DOUBLE)                          AS billed_cost,
+    CAST(EffectiveCost AS DOUBLE)                       AS effective_cost,
+    COALESCE(NULLIF(json_extract_string(Tags, '$.business_unit'), ''), 'Untagged') AS business_unit,
+    COALESCE(NULLIF(json_extract_string(Tags, '$.environment'), ''), 'unknown')    AS environment,
+    COALESCE(NULLIF(json_extract_string(Tags, '$.application'), ''), 'unknown')    AS application,
+    COALESCE(NULLIF(json_extract_string(Tags, '$.owner'), ''), 'unknown')          AS owner,
+    dayofweek(CAST(ChargePeriodStart AS DATE)) IN (0, 6)                           AS is_weekend,
+    BillingCurrency                                     AS currency,
+    CAST(BillingPeriodStart AS DATE)                    AS billing_period_start,
+    CAST(BillingPeriodEnd AS DATE)                      AS billing_period_end
+FROM raw_billing;
